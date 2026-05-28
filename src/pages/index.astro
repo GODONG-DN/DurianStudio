@@ -1,0 +1,376 @@
+---
+import {
+	BookOpenText,
+	CloudSun,
+	Crown,
+	ExternalLink,
+	Github,
+	Mail,
+	Moon,
+	Rss,
+	Sun,
+} from 'lucide-astro';
+import avatar from '../../assets/avatar.png';
+import wallpaper from '../../assets/wallpaper.png';
+import iconUrl from '../../assets/icon.svg?url';
+import BilibiliIcon from '../components/BilibiliIcon.astro';
+import '../styles/global.css';
+
+// 顶部导航配置。
+// 只放当前单页内的锚点，不新增真实路由；以后如果加新内容区，往这里追加即可。
+const navItems = [
+	{ label: '首页', href: '#home' },
+	{ label: '朕の天下', href: '#kingdom' },
+	{ label: '联系', href: '#contact' },
+];
+
+/*
+ * 联系方式配置。
+ *
+ * 这组数据会同时生成：
+ * 1. 头像下面的一排联系方式图标按钮。
+ * 2. 点击按钮后切换显示的详情面板。
+ *
+ * id 很重要：
+ * - data-link-tab 用它标记按钮。
+ * - data-link-panel 用它标记详情面板。
+ * - public/scripts/site.js 会根据这个 id 做按钮和面板的匹配。
+ *
+ * 如果以后要替换真实链接，只改这里的 href / value / description。
+ */
+const linkItems = [
+	{
+		id: 'github',
+		label: 'GitHub',
+		value: '@GODONG-DN',
+		href: 'https://github.com/GODONG-DN',
+		description: '用于放置项目代码、站点源码和后续公开实验。',
+		icon: Github,
+	},
+	{
+		id: 'blog',
+		label: 'Blog',
+		value: 'Writing hub',
+		href: 'https://blog.durian.uno',
+		description: '欢迎访问我的博客！',
+		icon: Rss,
+	},
+	{
+		id: 'email',
+		label: 'Email',
+		value: 'QQ Mail',
+		href: 'mailto:2978635241@qq.com',
+		description: '有问题欢迎联系我。',
+		icon: Mail,
+	},
+	{
+		id: 'chat',
+		label: 'Chat',
+		value: 'Bilibili',
+		href: 'https://space.bilibili.com/3493135789329055',
+		description: '我的 bilibili 空间。',
+		icon: BilibiliIcon,
+	},
+];
+
+// “朕の天下”项目列表配置。当前只保留 Blog，后续新增项目直接往数组里加对象。
+const projectItems = [
+	{
+		title: 'Blog',
+		type: 'Writing hub',
+		description: '欢迎访问我的博客！',
+		href: 'https://blog.durian.uno',
+		icon: BookOpenText,
+	},
+	{
+		title: 'StudyGO',
+		type: '我的学习小站',
+		description: '欢迎参观！',
+		href: '',
+		icon: BookOpenText,
+	},
+];
+
+/*
+ * 最底层“关于网站”链接分组。
+ *
+ * 参考 Chrome 官网 footer 的信息结构：
+ * - 顶部有 Follow / 社交入口。
+ * - 中间是多列链接分组。
+ * - 底部是品牌与辅助说明。
+ *
+ * 这里不照搬 Chrome 的大量企业链接，只保留个人网站真正需要的入口。
+ */
+const footerGroups = [
+	{
+		title: '站点',
+		links: [
+			{ label: '首页', href: '#home' },
+			{ label: '项目', href: '#kingdom' },
+			{ label: '联系', href: '#contact' },
+		],
+	},
+	{
+		title: '入口',
+		links: [
+			{ label: 'Blog', href: 'https://blog.durian.uno' },
+			{ label: 'GitHub', href: 'https://github.com/GODONG-DN' },
+		],
+	},
+	{
+		title: '说明',
+		links: [
+			{ label: 'Astro', href: 'https://astro.build/' },
+			{ label: 'Open-Meteo', href: 'https://open-meteo.com/' },
+		],
+	},
+];
+
+---
+
+<html lang="zh-CN" data-theme="dark">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href={iconUrl} />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<meta
+			name="description"
+			content="DurianStudio 是一个个人网站中心，用于整理作品、博客链接、项目源码和联系方式。"
+		/>
+		<title>DurianStudio</title>
+		<!--
+			外部客户端脚本。
+			is:inline 表示让 Astro 原样输出这个 script 标签，不打包、不改写、不把 JS 塞回 HTML。
+			真正的交互代码在 public/scripts/site.js，构建后会复制到 dist/scripts/site.js。
+		-->
+		<script is:inline src="/scripts/site.js" defer></script>
+	</head>
+	<body>
+		<!-- 页面级背景网格，只负责视觉纹理，不承载内容。 -->
+		<div class="page-grid" aria-hidden="true"></div>
+
+		<!-- 顶部固定导航：左侧品牌，右侧分区锚点和主题切换。 -->
+		<header class="topbar" aria-label="Primary navigation">
+			<a class="brand" href="#home" aria-label="DurianStudio home">
+				<img src={iconUrl} alt="" />
+				<span>DurianStudio</span>
+			</a>
+			<div class="topbar-actions">
+				<nav class="menu" aria-label="Section navigation">
+					{navItems.map((item) => <a href={item.href}>{item.label}</a>)}
+				</nav>
+				<!-- data-theme-toggle 会被 public/scripts/site.js 绑定点击事件。 -->
+				<button class="theme-toggle" type="button" data-theme-toggle aria-label="切换到浅色主题" aria-pressed="true">
+					<span class="theme-icon theme-sun" aria-hidden="true"><Sun size={18} stroke-width={2.35} /></span>
+					<span class="theme-icon theme-moon" aria-hidden="true"><Moon size={18} stroke-width={2.35} /></span>
+					<span data-theme-label>黑色</span>
+				</button>
+			</div>
+		</header>
+
+		<main>
+			<!-- 首屏：左侧个人名片，右侧今日信息和项目入口。 -->
+			<section class="hero" id="home" aria-labelledby="hero-title">
+				<img class="hero-bg" src={wallpaper.src} alt="" loading="eager" />
+				<div class="hero-shade"></div>
+				<div class="hero-content">
+					<!-- 个人名片主体：标题、头像、联系方式切换区域。 -->
+					<div class="profile-card reveal" aria-label="个人名片">
+						<p class="welcome-text" id="hero-title">
+							<span>Welcome to</span>
+							<span>DurianStudio</span>
+						</p>
+						<div class="identity-stack" id="contact">
+							<div class="avatar-shell">
+								<img src={avatar.src} alt="DurianStudio avatar" />
+								<span class="avatar-ping" aria-hidden="true"></span>
+							</div>
+						</div>
+						<div class="contact-hub" aria-label="联系方式与链接">
+							<!-- 联系方式按钮组：按钮上的 data-link-tab 与详情面板的 data-link-panel 对应。 -->
+							<div class="contact-icons" aria-label="联系方式">
+								{
+									linkItems.map((item, index) => {
+										const Icon = item.icon;
+										return (
+											<button
+												type="button"
+												class={index === 0 ? `contact-icon contact-${item.id} is-active` : `contact-icon contact-${item.id}`}
+												data-link-tab={item.id}
+												aria-selected={index === 0 ? 'true' : 'false'}
+												aria-label={item.label}
+												title={item.label}
+											>
+												<Icon size={20} stroke-width={2.2} />
+											</button>
+										);
+									})
+								}
+							</div>
+							<!-- 联系方式详情：默认显示第一项，其余项由 JS 切换 is-active。 -->
+							<div class="contact-detail">
+								{
+									linkItems.map((item, index) => (
+										<a
+											class={index === 0 ? 'detail-panel is-active' : 'detail-panel'}
+											data-link-panel={item.id}
+											href={item.href}
+											target={item.href.startsWith('http') ? '_blank' : undefined}
+											rel="noreferrer"
+										>
+											<span>{item.label}</span>
+											<strong>{item.value}</strong>
+											<p>{item.description}</p>
+											<ExternalLink size={18} stroke-width={2} />
+										</a>
+									))
+								}
+							</div>
+						</div>
+					</div>
+
+					<!-- 右侧信息区：天气问候 + 项目入口。 -->
+					<div class="world-panel reveal delay-1" aria-label="今日与项目">
+						<!-- 天气模块：data-weather-temp / data-weather-line 会由 JS 写入真实天气或兜底文案。 -->
+						<section class="weather-panel" aria-labelledby="today-title">
+							<div class="weather-symbol" aria-hidden="true">
+								<CloudSun size={72} stroke-width={1.85} />
+							</div>
+							<div class="weather-copy">
+								<p class="panel-kicker">今日小报告</p>
+								<h2 id="today-title">今日适合把灵感捞上岸</h2>
+								<p>
+									<strong data-weather-temp>晴朗 + 微云</strong>
+									<span data-weather-line>阳光明媚，云朵正在摸鱼。</span>
+								</p>
+							</div>
+						</section>
+
+						<!-- 项目入口模块：目前只有 Blog，后续项目会从 projectItems 自动渲染。 -->
+						<section class="kingdom-panel" id="kingdom" aria-labelledby="kingdom-title">
+							<div class="panel-heading">
+								<p class="panel-kicker"><Crown size={17} stroke-width={2.2} />Project Realm</p>
+								<h2 id="kingdom-title">朕の天下</h2>
+							</div>
+							<div class="project-list">
+								{
+									projectItems.map((item, index) => {
+										const Icon = item.icon;
+										return (
+											<a class="project-row" href={item.href} target="_blank" rel="noreferrer">
+												<span class="project-index">{String(index + 1).padStart(2, '0')}</span>
+												<span class="project-copy">
+													<em><Icon size={15} stroke-width={2.2} />{item.type}</em>
+													<strong>{item.title}</strong>
+													<span>{item.description}</span>
+												</span>
+												<span class="project-status">ONLINE</span>
+												<ExternalLink size={18} stroke-width={2} />
+											</a>
+										);
+									})
+								}
+							</div>
+						</section>
+					</div>
+				</div>
+				<a class="scroll-cue" href="#after-hero" aria-label="向下滑动查看下方内容">
+					<span>向下滑动</span>
+					<span class="scroll-cue-dot" aria-hidden="true"></span>
+				</a>
+			</section>
+
+			<!-- Hero 底部渐变尾巴：负责把首屏背景自然过渡到页面底色，并承载一条轻量欢迎语。 -->
+			<div class="hero-gradient-tail" id="after-hero">
+				<div class="wall-greeting" aria-label="欢迎光临">
+					<span>欢迎光临</span>
+					<span class="wall-kaomoji">(っ˘꒳˘ς)</span>
+				</div>
+			</div>
+
+			<!-- 中间展示区：只承载 assets/wall 里的 dark / light 两套像素墙。 -->
+			<section class="wall-section" aria-label="DurianStudio pixel wall">
+				<div class="wall-stage">
+					<div
+						class="durian-wall durian-wall-dark"
+						data-wall
+						data-wall-theme="dark"
+						data-wall-words="Durian,Pixel,Wave,Glow"
+					>
+						<canvas class="wall-canvas" data-wall-canvas width="896" height="256" aria-hidden="true"></canvas>
+					</div>
+					<div class="durian-wall durian-wall-light" data-wall data-wall-theme="light" data-wall-words="Durian">
+						<canvas class="wall-canvas" data-wall-canvas width="896" height="256" aria-hidden="true"></canvas>
+					</div>
+				</div>
+			</section>
+		</main>
+
+		<!--
+			最底层关于网站。
+			保持简洁：一行说明、一组联系图标、三列链接、底部品牌信息。
+		-->
+		<footer class="site-footer" aria-labelledby="footer-title">
+			<section class="footer-social" aria-label="关于网站与联系入口">
+				<div>
+					<p class="footer-kicker">About this site</p>
+					<h2 id="footer-title">关于 DurianStudio</h2>
+					<p>个人中心网站，用来放作品、博客入口、项目源码和联系方式。</p>
+				</div>
+				<ul aria-label="联系方式">
+					{
+						linkItems.map((item) => {
+							const Icon = item.icon;
+							return (
+								<li>
+									<a
+										href={item.href}
+										target={item.href.startsWith('http') ? '_blank' : undefined}
+										rel={item.href.startsWith('http') ? 'noreferrer' : undefined}
+										aria-label={item.label}
+										title={item.label}
+									>
+										<Icon size={21} stroke-width={2.2} />
+									</a>
+								</li>
+							);
+						})
+					}
+				</ul>
+			</section>
+
+			<nav class="footer-link-grid" aria-label="关于网站链接">
+				{
+					footerGroups.map((group) => (
+						<section class="footer-link-group">
+							<h3>{group.title}</h3>
+							<ul>
+								{group.links.map((link) => (
+									<li>
+										<a
+											href={link.href}
+											target={link.href.startsWith('http') ? '_blank' : undefined}
+											rel={link.href.startsWith('http') ? 'noreferrer' : undefined}
+										>
+											{link.label}
+											{link.href.startsWith('http') && <ExternalLink size={13} stroke-width={2.2} />}
+										</a>
+									</li>
+								))}
+							</ul>
+						</section>
+					))
+				}
+			</nav>
+
+			<div class="footer-bottom">
+				<a class="footer-logo" href="#home" aria-label="返回首页">
+					<img src={iconUrl} alt="" />
+					<span>DurianStudio</span>
+				</a>
+				<p>Built with Astro. Last polished in 2026.</p>
+			</div>
+		</footer>
+	</body>
+</html>

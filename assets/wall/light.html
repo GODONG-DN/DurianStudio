@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Durian Contribution Wall - White Theme</title>
+  <style>
+    :root {
+      --cell: clamp(5px, 1.36vw, 12px);
+      --gap: clamp(1px, 0.34vw, 3px);
+      --cols: 56;
+      --rows: 16;
+      --page: #f6f8fa;
+      --frame: #ffffff;
+      --screen: #ffffff;
+      --empty: #ebedf0;
+      --empty-border: rgba(175, 184, 193, 0.72);
+      --border: #d0d7de;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    .frame {
+      position: relative;
+      padding: clamp(10px, 2.2vw, 18px);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 18% 12%, rgba(45, 164, 78, 0.13), transparent 28%),
+        radial-gradient(circle at 84% 18%, rgba(9, 105, 218, 0.12), transparent 30%),
+        var(--frame);
+      overflow: hidden;
+      isolation: isolate;
+      box-shadow:
+        0 18px 48px rgba(31, 35, 40, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    }
+
+    /* 像素格和边框之间的彩色流动条 */
+    .frame::before {
+      content: "";
+      position: absolute;
+      inset: 5px;
+      z-index: 0;
+      border-radius: 14px;
+      background: linear-gradient(
+        90deg,
+        #ff6b6b,
+        #f59f00,
+        #2da44e,
+        #0969da,
+        #8250df,
+        #ff6b6b
+      );
+      background-size: 320% 100%;
+      animation: stripFlow 3.2s linear infinite, hueLift 7s ease-in-out infinite alternate;
+      opacity: 0.92;
+    }
+
+    .frame::after {
+      content: "";
+      position: absolute;
+      inset: clamp(7px, 1.5vw, 12px);
+      z-index: 1;
+      border-radius: 11px;
+      background:
+        linear-gradient(90deg, rgba(9, 105, 218, 0.04) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(45, 164, 78, 0.035) 1px, transparent 1px),
+        var(--screen);
+      background-size: 18px 18px;
+      box-shadow:
+        inset 0 0 0 1px rgba(208, 215, 222, 0.9),
+        inset 0 0 26px rgba(9, 105, 218, 0.06);
+    }
+
+    .wall {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: repeat(var(--cols), var(--cell));
+      grid-template-rows: repeat(var(--rows), var(--cell));
+      gap: var(--gap);
+    }
+
+    .wall::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 8px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.24), transparent 38%, rgba(9, 105, 218, 0.05));
+      mix-blend-mode: screen;
+      pointer-events: none;
+    }
+
+    .cell {
+      width: var(--cell);
+      height: var(--cell);
+      border-radius: 2px;
+      background: var(--empty);
+      border: 1px solid var(--empty-border);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+      transform: translateY(0) scale(1);
+      transition:
+        background-color 80ms linear,
+        border-color 80ms linear,
+        box-shadow 80ms linear,
+        transform 120ms linear;
+      will-change: transform, background-color;
+    }
+
+    @keyframes stripFlow {
+      from { background-position: 0% 50%; }
+      to { background-position: 320% 50%; }
+    }
+
+    @keyframes hueLift {
+      from { filter: saturate(1); }
+      to { filter: saturate(1.25) brightness(1.04); }
+    }
+
+    @media (max-width: 720px) {
+      .frame {
+        border-radius: 14px;
+      }
+
+      .frame::before {
+        inset: 4px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="frame" aria-label="Durian contribution wall white theme">
+    <div id="wall" class="wall"></div>
+  </main>
+
+  <script>
+    const COLS = 56;
+    const ROWS = 16;
+    const EMPTY = "#ebedf0";
+    const BORDER = "rgba(175, 184, 193, 0.72)";
+    const wall = document.getElementById("wall");
+    const cells = [];
+
+    const font = {
+      D: [
+        "11110",
+        "10001",
+        "10001",
+        "10001",
+        "10001",
+        "10001",
+        "11110"
+      ],
+      u: [
+        "10001",
+        "10001",
+        "10001",
+        "10001",
+        "10001",
+        "10011",
+        "01101"
+      ],
+      r: [
+        "10110",
+        "11001",
+        "10000",
+        "10000",
+        "10000",
+        "10000",
+        "10000"
+      ],
+      i: [
+        "010",
+        "000",
+        "010",
+        "010",
+        "010",
+        "010",
+        "010"
+      ],
+      a: [
+        "01110",
+        "00001",
+        "01111",
+        "10001",
+        "10001",
+        "10011",
+        "01101"
+      ],
+      n: [
+        "10110",
+        "11001",
+        "10001",
+        "10001",
+        "10001",
+        "10001",
+        "10001"
+      ]
+    };
+
+    function getWordPixels(word) {
+      const letterGap = 1;
+      const glyphHeight = 7;
+      const glyphs = [...word].map(ch => font[ch]).filter(Boolean);
+      const wordWidth = glyphs.reduce((sum, glyph, index) => {
+        return sum + glyph[0].length + (index === glyphs.length - 1 ? 0 : letterGap);
+      }, 0);
+      const startX = Math.floor((COLS - wordWidth) / 2);
+      const startY = Math.floor((ROWS - glyphHeight) / 2);
+      const points = [];
+      let cursor = startX;
+
+      for (const glyph of glyphs) {
+        glyph.forEach((row, gy) => {
+          [...row].forEach((v, gx) => {
+            if (v === "1") points.push({ x: cursor + gx, y: startY + gy });
+          });
+        });
+
+        cursor += glyph[0].length + letterGap;
+      }
+
+      return points;
+    }
+
+    for (let y = 0; y < ROWS; y++) {
+      for (let x = 0; x < COLS; x++) {
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        wall.appendChild(cell);
+        cells[y * COLS + x] = cell;
+      }
+    }
+
+    const wordPixels = getWordPixels("Durian");
+
+    const fireworks = [
+      { cx: 6, cy: 4, hue: 20, delay: 0.00, size: 1.35 },
+      { cx: 49, cy: 4, hue: 210, delay: 0.55, size: 1.35 },
+      { cx: 6, cy: 12, hue: 285, delay: 1.05, size: 1.2 },
+      { cx: 49, cy: 12, hue: 125, delay: 1.50, size: 1.2 }
+    ];
+
+    const sparkPattern = [
+      [0, 0, 1.0],
+      [0, -2, 0.76],
+      [2, 0, 0.76],
+      [0, 2, 0.76],
+      [-2, 0, 0.76],
+      [1, -1, 0.52],
+      [1, 1, 0.52],
+      [-1, 1, 0.52],
+      [-1, -1, 0.52]
+    ];
+
+    function resetCell(cell) {
+      cell.style.backgroundColor = EMPTY;
+      cell.style.borderColor = BORDER;
+      cell.style.boxShadow = "inset 0 1px 0 rgba(255, 255, 255, 0.75)";
+      cell.style.transform = "translateY(0) scale(1)";
+    }
+
+    function paintCell(x, y, bg, border, shadow = "none", transform = "translateY(0) scale(1)") {
+      if (x < 0 || x >= COLS || y < 0 || y >= ROWS) return;
+      const cell = cells[y * COLS + x];
+      cell.style.backgroundColor = bg;
+      cell.style.borderColor = border;
+      cell.style.boxShadow = shadow;
+      cell.style.transform = transform;
+    }
+
+    function drawFireworks(time) {
+      for (const fw of fireworks) {
+        const t = ((time / 1000 + fw.delay) % 2.35) / 2.35;
+        const pulse = Math.sin(t * Math.PI);
+        const fade = Math.pow(Math.max(0, pulse), 1.2) * fw.size;
+
+        sparkPattern.forEach(([dx, dy, weight], index) => {
+          const alpha = Math.max(0, fade * weight - index * 0.01);
+          if (alpha <= 0.04) return;
+
+          const light = 48 + alpha * 26;
+          const hue = fw.hue + index * 7;
+          const shadow = alpha > 0.24
+            ? `0 0 ${3 + alpha * 5}px hsla(${hue}, 88%, 56%, ${alpha * 0.25})`
+            : "none";
+
+          paintCell(
+            fw.cx + dx,
+            fw.cy + dy,
+            `hsla(${hue}, 84%, ${light}%, ${0.28 + alpha * 0.52})`,
+            `rgba(31, 35, 40, ${0.08 + alpha * 0.16})`,
+            shadow,
+            `scale(${0.96 + alpha * 0.08})`
+          );
+        });
+      }
+    }
+
+    function drawWord(time) {
+      const yMove = Math.sin(time / 520) * 3.4;
+      const colorMove = time * 0.036;
+      const scale = 0.99 + Math.sin(time / 680) * 0.018;
+
+      for (const p of wordPixels) {
+        const hue = (p.x * 8.3 - colorMove + p.y * 3.5 + 360) % 360;
+        const light = 48 + Math.sin(time / 360 + p.x * 0.24) * 4;
+        const shadow = `0 0 5px hsla(${hue}, 82%, 54%, 0.18), inset 0 1px 0 rgba(255,255,255,0.55)`;
+
+        paintCell(
+          p.x,
+          p.y,
+          `hsl(${hue}, 76%, ${light}%)`,
+          "rgba(31, 35, 40, 0.18)",
+          shadow,
+          `translateY(${yMove}px) scale(${scale})`
+        );
+      }
+    }
+
+    function render(time) {
+      for (const cell of cells) resetCell(cell);
+      drawFireworks(time);
+      drawWord(time);
+      requestAnimationFrame(render);
+    }
+
+    requestAnimationFrame(render);
+  </script>
+</body>
+</html>

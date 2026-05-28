@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Durian Contribution Wall</title>
+  <style>
+    :root {
+      --cell: clamp(5px, 1.36vw, 12px);
+      --gap: clamp(1px, 0.34vw, 3px);
+      --cols: 56;
+      --rows: 16;
+      --bg: #0d1117;
+      --empty: #161b22;
+      --empty-border: rgba(48, 54, 61, 0.72);
+      --border: #30363d;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: transparent;
+      overflow: hidden;
+    }
+
+    .frame {
+      position: relative;
+      padding: clamp(10px, 2.25vw, 20px);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 12% 18%, rgba(57, 211, 83, 0.13), transparent 29%),
+        radial-gradient(circle at 85% 18%, rgba(88, 166, 255, 0.16), transparent 32%),
+        #0d1117;
+      overflow: hidden;
+      isolation: isolate;
+      box-shadow:
+        0 24px 64px rgba(1, 4, 9, 0.42),
+        inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+
+    .frame::before {
+      content: "";
+      position: absolute;
+      inset: 6px;
+      z-index: 0;
+      border-radius: 14px;
+      background: linear-gradient(
+        90deg,
+        #ff5f6d,
+        #ffc371,
+        #39d353,
+        #58a6ff,
+        #bf80ff,
+        #ff5f6d
+      );
+      background-size: 300% 100%;
+      opacity: 0.8;
+      animation: borderFlow 3.4s linear infinite, borderPulse 5.8s ease-in-out infinite alternate;
+    }
+
+    .frame::after {
+      content: "";
+      position: absolute;
+      inset: clamp(7px, 1.55vw, 13px);
+      z-index: 1;
+      border-radius: 11px;
+      background:
+        linear-gradient(90deg, rgba(88,166,255,0.06) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(57,211,83,0.045) 1px, transparent 1px),
+        #0d1117;
+      background-size: 18px 18px;
+      box-shadow:
+        inset 0 0 0 1px rgba(48, 54, 61, 0.78),
+        inset 0 0 34px rgba(88, 166, 255, 0.07);
+    }
+
+    .wall {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: repeat(var(--cols), var(--cell));
+      grid-template-rows: repeat(var(--rows), var(--cell));
+      gap: var(--gap);
+    }
+
+    .wall::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 8px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.08), transparent 42%, rgba(57,211,83,0.08)),
+        repeating-linear-gradient(180deg, transparent 0 8px, rgba(255,255,255,0.025) 8px 9px);
+      mix-blend-mode: screen;
+      pointer-events: none;
+    }
+
+    .cell {
+      width: var(--cell);
+      height: var(--cell);
+      border-radius: 3px;
+      background: var(--empty);
+      border: 1px solid var(--empty-border);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.025);
+      transform: translateY(0) scale(1);
+      transition:
+        background-color 85ms linear,
+        border-color 85ms linear,
+        box-shadow 85ms linear,
+        transform 120ms ease-out;
+      will-change: transform, background-color;
+    }
+
+    @keyframes borderFlow {
+      from { background-position: 0% 50%; }
+      to { background-position: 300% 50%; }
+    }
+
+    @keyframes borderPulse {
+      from { filter: saturate(1) brightness(0.94); }
+      to { filter: saturate(1.24) brightness(1.08); }
+    }
+
+    @media (max-width: 720px) {
+      .frame {
+        border-radius: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="frame" aria-label="animated contribution wall">
+    <div id="wall" class="wall"></div>
+  </main>
+
+  <script>
+    const COLS = 56;
+    const ROWS = 16;
+    const EMPTY = "#161b22";
+    const BORDER = "rgba(48, 54, 61, 0.72)";
+    const wall = document.getElementById("wall");
+    const cells = [];
+
+    const font = {
+      D: ["11110", "10001", "10001", "10001", "10001", "10001", "11110"],
+      u: ["10001", "10001", "10001", "10001", "10001", "10011", "01101"],
+      r: ["10110", "11001", "10000", "10000", "10000", "10000", "10000"],
+      i: ["010", "000", "010", "010", "010", "010", "010"],
+      a: ["01110", "00001", "01111", "10001", "10001", "10011", "01101"],
+      n: ["10110", "11001", "10001", "10001", "10001", "10001", "10001"],
+
+      P: ["11110", "10001", "10001", "11110", "10000", "10000", "10000"],
+      x: ["10001", "01010", "00100", "00100", "00100", "01010", "10001"],
+      e: ["01110", "10001", "11111", "10000", "10000", "10001", "01110"],
+      l: ["100", "100", "100", "100", "100", "100", "111"],
+
+      W: ["10001", "10001", "10001", "10101", "10101", "11011", "10001"],
+      A: ["01110", "10001", "10001", "11111", "10001", "10001", "10001"],
+      V: ["10001", "10001", "10001", "10001", "01010", "01010", "00100"],
+      E: ["11111", "10000", "10000", "11110", "10000", "10000", "11111"],
+
+      G: ["01111", "10000", "10000", "10011", "10001", "10001", "01110"],
+      o: ["01110", "10001", "10001", "10001", "10001", "10001", "01110"],
+      w: ["10001", "10001", "10001", "10101", "10101", "10101", "01010"],
+      L: ["10000", "10000", "10000", "10000", "10000", "10000", "11111"],
+
+      S: ["01111", "10000", "10000", "01110", "00001", "00001", "11110"],
+      t: ["111", "010", "010", "010", "010", "010", "001"],
+      R: ["11110", "10001", "10001", "11110", "10100", "10010", "10001"],
+    };
+
+    const words = ["Durian", "Pixel", "Wave", "Glow"];
+    const WORD_HOLD = 2600;
+    const MORPH_TIME = 980;
+    const ENTRY_TIME = 1400;
+
+    for (let y = 0; y < ROWS; y++) {
+      for (let x = 0; x < COLS; x++) {
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        wall.appendChild(cell);
+        cells[y * COLS + x] = cell;
+      }
+    }
+
+    function easeInOut(t) {
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+
+    function easeOut(t) {
+      return 1 - Math.pow(1 - t, 3);
+    }
+
+    function clamp(n, min = 0, max = 1) {
+      return Math.max(min, Math.min(max, n));
+    }
+
+    function getWordPixels(word) {
+      const letterGap = 1;
+      const glyphHeight = 7;
+      const glyphs = [...word].map(ch => font[ch]).filter(Boolean);
+      const wordWidth = glyphs.reduce((sum, glyph, index) => {
+        return sum + glyph[0].length + (index === glyphs.length - 1 ? 0 : letterGap);
+      }, 0);
+      const startX = Math.floor((COLS - wordWidth) / 2);
+      const startY = Math.floor((ROWS - glyphHeight) / 2);
+      const points = [];
+      let cursor = startX;
+
+      for (const glyph of glyphs) {
+        glyph.forEach((row, gy) => {
+          [...row].forEach((v, gx) => {
+            if (v === "1") {
+              points.push({
+                x: cursor + gx,
+                y: startY + gy,
+                localX: cursor + gx - startX,
+                localY: gy,
+                wordWidth
+              });
+            }
+          });
+        });
+
+        cursor += glyph[0].length + letterGap;
+      }
+
+      return points;
+    }
+
+    const wordMaps = words.map(word => ({
+      word,
+      points: getWordPixels(word)
+    }));
+
+    const fireworks = [
+      { cx: 6, cy: 4, hue: 32, delay: 0.00, size: 1.25 },
+      { cx: 49, cy: 4, hue: 207, delay: 0.55, size: 1.25 },
+      { cx: 6, cy: 12, hue: 286, delay: 1.05, size: 1.15 },
+      { cx: 49, cy: 12, hue: 125, delay: 1.50, size: 1.15 }
+    ];
+
+    const sparkPattern = [
+      [0, 0, 1.00], [0, -2, 0.62], [2, 0, 0.62], [0, 2, 0.62], [-2, 0, 0.62],
+      [1, -1, 0.42], [1, 1, 0.42], [-1, 1, 0.42], [-1, -1, 0.42]
+    ];
+
+    function resetCell(cell) {
+      cell.style.backgroundColor = EMPTY;
+      cell.style.borderColor = BORDER;
+      cell.style.boxShadow = "inset 0 1px 0 rgba(255,255,255,0.025)";
+      cell.style.transform = "translateY(0) scale(1)";
+    }
+
+    function addToBuffer(buffer, x, y, data) {
+      if (x < 0 || x >= COLS || y < 0 || y >= ROWS || data.alpha <= 0.02) return;
+      const key = y * COLS + x;
+      const old = buffer.get(key);
+      if (!old || data.alpha > old.alpha) buffer.set(key, data);
+    }
+
+    function drawFireworks(buffer, time) {
+      for (const fw of fireworks) {
+        const t = ((time / 1000 + fw.delay) % 2.4) / 2.4;
+        const pulse = Math.sin(t * Math.PI);
+        const fade = Math.pow(pulse, 1.6) * fw.size;
+
+        sparkPattern.forEach(([dx, dy, weight], index) => {
+          const alpha = Math.max(0, fade * weight - index * 0.012);
+          if (alpha <= 0.04) return;
+
+          addToBuffer(buffer, fw.cx + dx, fw.cy + dy, {
+            type: "spark",
+            alpha,
+            hue: fw.hue + index * 7 + Math.sin(time / 680) * 7,
+            yMove: 0,
+            scale: 0.96 + alpha * 0.08
+          });
+        });
+      }
+    }
+
+    function drawEntry(buffer, time) {
+      const progress = clamp(time / ENTRY_TIME);
+      const points = wordMaps[0].points;
+      const colorMove = time * 0.034;
+      const yFloat = Math.sin(time / 540) * 2.8;
+
+      for (const p of points) {
+        const delay = (p.localX / p.wordWidth) * 0.42 + (p.localY / 7) * 0.18;
+        const appear = easeOut(clamp((progress - delay) / 0.42));
+        const hue = (p.x * 8.4 - colorMove + p.y * 4.2 + 360) % 360;
+
+        addToBuffer(buffer, p.x, p.y, {
+          type: "word",
+          alpha: appear,
+          hue,
+          yMove: yFloat + (1 - appear) * 8,
+          scale: 0.82 + appear * 0.18
+        });
+      }
+    }
+
+    function drawMorphingWord(buffer, time) {
+      const t = time - ENTRY_TIME;
+      const cycle = WORD_HOLD + MORPH_TIME;
+      const index = Math.floor(t / cycle) % wordMaps.length;
+      const nextIndex = (index + 1) % wordMaps.length;
+      const phase = t % cycle;
+      const isMorphing = phase > WORD_HOLD;
+      const morph = isMorphing ? easeInOut((phase - WORD_HOLD) / MORPH_TIME) : 0;
+
+      const current = wordMaps[index].points;
+      const next = wordMaps[nextIndex].points;
+      const colorMove = time * 0.034;
+      const yFloat = Math.sin(time / 540) * 2.8;
+
+      if (!isMorphing) {
+        for (const p of current) {
+          const hue = (p.x * 8.4 - colorMove + p.y * 4.2 + 360) % 360;
+          addToBuffer(buffer, p.x, p.y, {
+            type: "word",
+            alpha: 1,
+            hue,
+            yMove: yFloat,
+            scale: 1
+          });
+        }
+        return;
+      }
+
+      // 当前文字向上淡出。
+      for (const p of current) {
+        const wave = Math.sin((p.localX / Math.max(1, p.wordWidth)) * Math.PI);
+        const alpha = (1 - morph) * (0.55 + wave * 0.45);
+        const hue = (p.x * 8.4 - colorMove + p.y * 4.2 + 360) % 360;
+
+        addToBuffer(buffer, p.x, p.y, {
+          type: "word",
+          alpha,
+          hue,
+          yMove: yFloat - morph * 7,
+          scale: 1 - morph * 0.14
+        });
+      }
+
+      // 新文字从下方逐列进入，形成顺滑切换。
+      for (const p of next) {
+        const localProgress = clamp((morph - (p.localX / Math.max(1, p.wordWidth)) * 0.28) / 0.72);
+        const appear = easeOut(localProgress);
+        const hue = (p.x * 8.4 - colorMove + p.y * 4.2 + 120 + 360) % 360;
+
+        addToBuffer(buffer, p.x, p.y, {
+          type: "word",
+          alpha: appear,
+          hue,
+          yMove: yFloat + (1 - appear) * 7,
+          scale: 0.84 + appear * 0.16
+        });
+      }
+    }
+
+    function paintBuffer(buffer) {
+      for (let i = 0; i < cells.length; i++) {
+        const cell = cells[i];
+        const data = buffer.get(i);
+
+        if (!data) {
+          resetCell(cell);
+          continue;
+        }
+
+        const a = clamp(data.alpha);
+        const hue = data.hue;
+
+        if (data.type === "spark") {
+          const light = 30 + a * 38;
+          cell.style.backgroundColor = `hsla(${hue}, 84%, ${light}%, ${0.34 + a * 0.62})`;
+          cell.style.borderColor = `rgba(240, 246, 252, ${0.1 + a * 0.26})`;
+          cell.style.boxShadow = a > 0.28 ? `0 0 ${3 + a * 6}px hsla(${hue}, 86%, 62%, ${a * 0.34})` : "none";
+          cell.style.transform = `translateY(${data.yMove}px) scale(${data.scale})`;
+          continue;
+        }
+
+        const light = 38 + a * 18;
+        const saturation = 68 + a * 12;
+        cell.style.backgroundColor = `hsla(${hue}, ${saturation}%, ${light}%, ${0.18 + a * 0.82})`;
+        cell.style.borderColor = `rgba(240, 246, 252, ${0.06 + a * 0.13})`;
+        cell.style.boxShadow = a > 0.55
+          ? `0 0 ${2 + a * 4}px hsla(${hue}, 82%, 58%, ${a * 0.16}), inset 0 1px 0 rgba(255,255,255,${a * 0.16})`
+          : "none";
+        cell.style.transform = `translateY(${data.yMove}px) scale(${data.scale})`;
+      }
+    }
+
+    function render(time) {
+      const buffer = new Map();
+      drawFireworks(buffer, time);
+
+      if (time < ENTRY_TIME) drawEntry(buffer, time);
+      else drawMorphingWord(buffer, time);
+
+      paintBuffer(buffer);
+      requestAnimationFrame(render);
+    }
+
+    requestAnimationFrame(render);
+  </script>
+</body>
+</html>
